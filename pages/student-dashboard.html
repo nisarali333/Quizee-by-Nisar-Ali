@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Quizee By Nisar Ali</title>
+    <meta name="description" content="Your personal student portal for Quizee — view active quizzes and track your performance.">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ─── Layout ─────────────────────────────────── */
+        body { display: block; }
+
+        .sd-layout {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--bg-color);
+        }
+
+        /* ─── Top Navigation Bar ─────────────────────── */
+        .sd-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            width: 100%;
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 64px;
+        }
+
+        .sd-topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
+        }
+
+        .sd-topbar-brand .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .sd-topbar-brand .brand-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sd-topbar-brand .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            border-left: 1px solid var(--border-color);
+            padding-left: 0.6rem;
+            margin-left: 0.2rem;
+        }
+
+        .sd-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Theme toggle */
+        .sd-theme-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        .sd-theme-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Profile pill */
+        .sd-profile-pill {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg-color);
+        }
+        .sd-profile-pill:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+        }
+        .sd-profile-pill img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .sd-profile-pill .pill-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .sd-profile-pill .pill-chevron {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Profile Dropdown */
+        .sd-profile-dropdown {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            min-width: 180px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            z-index: 200;
+            animation: fadeIn 0.2s ease;
+        }
+        .sd-profile-dropdown.open { display: block; }
+
+        .sd-dropdown-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sd-dropdown-header p { margin: 0; font-size: 0.8rem; color: var(--text-secondary); }
+        .sd-dropdown-header strong { font-size: 0.9rem; color: var(--text-primary); }
+
+        .sd-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            font-family: var(--font-family);
+        }
+        .sd-dropdown-item:hover { background: var(--bg-color); }
+        .sd-dropdown-item.danger { color: var(--danger-color); }
+
+        /* ─── Main Content Wrapper ────────────────────── */
+        .sd-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* ─── Welcome Hero Card ───────────────────────── */
+        .sd-welcome {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #7c3aed 60%, var(--secondary-color) 100%);
+            border-radius: var(--radius-xl);
+            padding: 2rem 2.5rem;
+            color: white;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(79,70,229,0.35);
+        }
+
+        .sd-welcome::before {
+            content: '';
+            position: absolute;
+            top: -60px; right: -40px;
+            width: 260px; height: 260px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .sd-welcome::after {
+            content: '';
+            position: absolute;
+            bottom: -80px; right: 100px;
+            width: 200px; height: 200px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+
+        .sd-welcome-inner {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .sd-welcome h2 {
+            color: white;
+            font-size: 1.7rem;
+            margin-bottom: 0.4rem;
+        }
+        .sd-welcome p {
+            color: rgba(255,255,255,0.8);
+            margin: 0;
+        }
+
+        .sd-welcome-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.35rem;
+        }
+        .sd-welcome-meta .meta-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(4px);
+            padding: 0.3rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            color: white;
+            font-weight: 500;
+        }
+
+        /* ─── Stat Cards Row ──────────────────────────── */
+        .sd-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .sd-stat-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+        .sd-stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: transparent;
+        }
+
+        .sd-stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .sd-stat-info h3 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 0 0.15rem;
+            color: var(--text-primary);
+        }
+        .sd-stat-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* ─── Two-Column Section ──────────────────────── */
+        .sd-main-grid {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        /* ─── Section Headings ────────────────────────── */
+        .sd-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+        .sd-section-head h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sd-section-head h3 i {
+            color: var(--primary-color);
+        }
+        .sd-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .sd-badge.primary { background: rgba(79,70,229,0.12); color: var(--primary-color); }
+        .sd-badge.success { background: rgba(16,185,129,0.12); color: var(--success-color); }
+
+        /* ─── Quiz Cards ──────────────────────────────── */
+        .sd-quiz-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .sd-quiz-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+            border-radius: 0 0 0 0;
+        }
+        .sd-quiz-card:hover {
+            transform: translateX(6px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+
+        .sd-quiz-icon {
+            width: 46px;
+            height: 46px;
+            background: rgba(79,70,229,0.1);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+
+        .sd-quiz-info { flex: 1; min-width: 0; }
+        .sd-quiz-info h4 {
+            margin: 0 0 0.2rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sd-quiz-info p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* ─── Right Panel Cards ───────────────────────── */
+        .sd-panel-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* ─── Result Items ────────────────────────────── */
+        .sd-result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .sd-result-item:last-child { border-bottom: none; }
+
+        .sd-result-score {
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 0.25rem 0.6rem;
+            border-radius: var(--radius-sm);
+        }
+        .sd-result-score.good  { background: rgba(16,185,129,0.12); color: var(--success-color); }
+        .sd-result-score.okay  { background: rgba(245,158,11,0.12);  color: var(--warning-color); }
+        .sd-result-score.poor  { background: rgba(239,68,68,0.12);   color: var(--danger-color);  }
+
+        /* ─── Announcement ────────────────────────────── */
+        .sd-announcement {
+            background: rgba(79,70,229,0.06);
+            border-left: 3px solid var(--primary-color);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 0.85rem 1rem;
+        }
+        .sd-announcement strong { font-size: 0.9rem; color: var(--text-primary); }
+        .sd-announcement p { font-size: 0.8rem; margin: 0.25rem 0 0; }
+
+        /* ─── Empty States ────────────────────────────── */
+        .sd-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+        .sd-empty i { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.4; display: block; }
+        .sd-empty p { font-size: 0.9rem; margin: 0; }
+
+        /* ─── Responsive ──────────────────────────────── */
+        @media (max-width: 900px) {
+            .sd-main-grid { grid-template-columns: 1fr; }
+            .sd-stats { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 600px) {
+            .sd-content { padding: 1rem; }
+            .sd-topbar { padding: 0 1rem; }
+            .sd-stats { grid-template-columns: 1fr; }
+            .sd-welcome { padding: 1.5rem; }
+        .sd-welcome-meta { align-items: flex-start; }
+        }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 99; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (min-width: 901px) { .sidebar-overlay { display: none !important; } }
+    </style>
+</head>
+<body>
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="sd-layout">
+
+    <!-- ══ TOP BAR ══════════════════════════════════════ -->
+    <header class="sd-topbar">
+        <a class="sd-topbar-brand" href="#">
+            <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+            <span class="brand-name">Quizee</span>
+            <span class="brand-sub">Student Portal</span>
+        </a>
+
+        <div class="sd-topbar-actions">
+            <!-- Theme toggle -->
+            <button class="sd-theme-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark Mode">
+                <i class="fa-solid fa-moon" id="theme-icon"></i>
+            </button>
+
+            <!-- Profile pill -->
+            <div class="sd-profile-pill" id="profilePill" onclick="toggleProfileDropdown()">
+                <img src="https://ui-avatars.com/api/?name=Student&background=4f46e5&color=fff" alt="Profile" id="topbarProfileImg">
+                <span class="pill-name" id="topbarProfileName">Student</span>
+                <i class="fa-solid fa-chevron-down pill-chevron"></i>
+
+                <div class="sd-profile-dropdown" id="profileDropdown">
+                    <div class="sd-dropdown-header">
+                        <p>Signed in as</p>
+                        <strong id="dropdownName">Student</strong>
+                    </div>
+                    <a href="#" class="sd-dropdown-item danger" onclick="logoutStudent(); return false;">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ══ MAIN CONTENT ════════════════════════════════ -->
+    <main class="sd-content fade-in">
+
+        <!-- Welcome Hero -->
+        <div class="sd-welcome">
+            <div class="sd-welcome-inner">
+                <div>
+                    <h2>Welcome back, <span id="welcomeName">Student</span>! 👋</h2>
+                    <p>Ready to test your knowledge today?</p>
+                </div>
+                <div class="sd-welcome-meta">
+                    <span class="meta-pill"><i class="fa-solid fa-id-badge"></i> ID: <strong id="welcomeId">---</strong></span>
+                    <span class="meta-pill"><i class="fa-solid fa-chalkboard-user"></i> Class: <strong id="welcomeClass">---</strong></span>
+                    <span class="meta-pill"><i class="fa-solid fa-calendar"></i> Session: <strong id="welcomeSession">---</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="sd-stats">
+            <div class="sd-stat-card">
+                <div class="sd-stat-icon" style="background: linear-gradient(135deg, var(--primary-color), #7c3aed);">
+                    <i class="fa-solid fa-file-signature"></i>
+                </div>
+                <div class="sd-stat-info">
+                    <h3 id="statActive">0</h3>
+                    <p>Active Quizzes</p>
+                </div>
+            </div>
+            <div class="sd-stat-card">
+                <div class="sd-stat-icon" style="background: linear-gradient(135deg, var(--success-color), #059669);">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="sd-stat-info">
+                    <h3 id="statCompleted">0</h3>
+                    <p>Completed Quizzes</p>
+                </div>
+            </div>
+            <div class="sd-stat-card">
+                <div class="sd-stat-icon" style="background: linear-gradient(135deg, var(--warning-color), #d97706);">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div class="sd-stat-info">
+                    <h3 id="statAvg">0%</h3>
+                    <p>Average Score</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two-column grid -->
+        <div class="sd-main-grid">
+
+            <!-- LEFT: Active Quizzes -->
+            <div>
+                <div class="sd-section-head">
+                    <h3><i class="fa-solid fa-bolt"></i> Active Quizzes</h3>
+                    <span class="sd-badge primary" id="activeCountBadge">0 available</span>
+                </div>
+                <div id="activeQuizzesContainer">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+
+            <!-- RIGHT: Results + Announcements -->
+            <div>
+                <div class="sd-panel-card">
+                    <div class="sd-section-head">
+                        <h3><i class="fa-solid fa-trophy"></i> Recent Results</h3>
+                        <span class="sd-badge success" id="completedCountBadge">0 done</span>
+                    </div>
+                    <div id="recentResultsContainer">
+                        <!-- Injected by JS -->
+                    </div>
+                </div>
+
+                <div class="sd-panel-card">
+                    <h3 style="font-size:1rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i class="fa-solid fa-bullhorn" style="color:var(--primary-color);"></i> Announcements
+                    </h3>
+                    <div class="sd-announcement">
+                        <strong>New Term Started</strong>
+                        <p>Check your active quizzes for this session and stay on top of your studies!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="../js/main.js"></script>
+<script src="../js/db.js"></script>
+<script src="../js/student-dashboard.js"></script>
+<script>
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        const pill = document.getElementById('profilePill');
+        if (pill && !pill.contains(e.target)) {
+            const dd = document.getElementById('profileDropdown');
+            if (dd) dd.classList.remove('open');
+        }
+    });
+
+    function toggleProfileDropdown() {
+        const dd = document.getElementById('profileDropdown');
+        if (dd) dd.classList.toggle('open');
+    }
+</script>
+<!-- Review Modal -->
+<div id="reviewModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; justify-content:center; align-items:center;">
+    <div class="card" style="width: 90%; max-width: 650px; max-height: 85vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+            <h3 id="reviewModalTitle" style="margin:0; font-size:1.2rem;">Quiz Review</h3>
+            <button class="btn btn-secondary" style="padding: 0.4rem 0.8rem;" onclick="closeReviewModal()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        <div id="reviewModalContent" style="padding: 1.5rem; overflow-y: auto; flex:1;">
+            <!-- Questions will be dynamically inserted here -->
+        </div>
+        <div style="padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); text-align:right; background:var(--bg-color);">
+            <button class="btn btn-primary" onclick="closeReviewModal()">Close</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Quizee By Nisar Ali</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .layout {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background-color: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--primary-color);
+        }
+
+        .sidebar-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 1rem 0;
+            flex: 1;
+            overflow-y: fit;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: rgba(79, 70, 229, 0.1);
+            color: var(--primary-color);
+            border-right: 4px solid var(--primary-color);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            height: 100vh;
+            background-color: var(--bg-color);
+        }
+
+        .topbar {
+            height: 70px;
+            background-color: var(--surface-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.6rem 1rem 0.6rem 2.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .profile-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .profile-menu img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .content-area {
+            padding: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: 1.5rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-info h3 {
+            font-size: 1.8rem;
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .stat-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Section hiding logic */
+        .section-view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .section-view.active {
+            display: block;
+        }
+        
+        /* ── Student Filter Bar ────────────────────── */
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+        }
+        .filter-bar label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .filter-select {
+            padding: 0.45rem 2rem 0.45rem 0.85rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--surface-color);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: var(--transition);
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2364748b' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.6rem center;
+            min-width: 140px;
+        }
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+        }
+        .filter-divider {
+            width: 1px;
+            height: 22px;
+            background: var(--border-color);
+        }
+        .filter-clear-btn {
+            padding: 0.45rem 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-family);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .filter-clear-btn:hover {
+            background: var(--danger-color);
+            color: white;
+            border-color: var(--danger-color);
+        }
+        .student-count-badge {
+            margin-left: auto;
+            padding: 0.3rem 0.75rem;
+            background: rgba(79,70,229,0.1);
+            color: var(--primary-color);
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Drag and Drop Upload Styles */
+        .upload-area {
+            border: 2px dashed var(--primary-color);
+            border-radius: var(--radius-lg);
+            padding: 3rem;
+            text-align: center;
+            background: rgba(79, 70, 229, 0.05);
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 1.5rem;
+        }
+        
+        .upload-area:hover, .upload-area.dragover {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        th {
+            background-color: var(--bg-color);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-graduation-cap fa-2x"></i>
+                <h2>Quizee</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="switchSection('dashboard')">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </li>
+                <li class="nav-item" onclick="switchSection('classes')">
+                    <i class="fa-solid fa-chalkboard-user"></i> Classes & Students
+                </li>
+                <li class="nav-item" onclick="switchSection('upload')">
+                    <i class="fa-solid fa-pen-to-square"></i> Create Quiz
+                </li>
+                <li class="nav-item" onclick="switchSection('library')">
+                    <i class="fa-solid fa-book"></i> Quiz Library
+                </li>
+                <li class="nav-item" onclick="switchSection('results')">
+                    <i class="fa-solid fa-square-poll-vertical"></i> Results & Reports
+                </li>
+            </ul>
+            <ul class="nav-menu" style="flex: 0;">
+                <li class="nav-item" onclick="toggleTheme()">
+                    <i class="fa-solid fa-moon" id="theme-icon"></i> Dark Mode
+                </li>
+                <li class="nav-item" style="color: var(--danger-color);" onclick="logoutTeacher()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <button class="btn btn-secondary hide-desktop" style="padding: 0.5rem 0.75rem;" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="search-bar hide-mobile">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="dashboardSearch" placeholder="Search students" oninput="handleDashboardSearch()">
+                    </div>
+                </div>
+                <div class="topbar-right">
+                                        <div class="profile-menu" onclick="toggleProfileDropdown()" style="position: relative; cursor: pointer;">
+                        <img src="https://ui-avatars.com/api/?name=Nisar+Ali&background=4f46e5&color=fff" alt="Profile" id="topbarProfileImg">
+                        <span id="topbarProfileName" style="font-weight:600;">Teacher Name</span>
+                        <span id="topbarSchoolName" style="font-size:0.75rem; color:var(--text-secondary); display:block; line-height:1.2;"></span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i>
+                        
+                        <div id="profileDropdown" style="display: none; position: absolute; top: 120%; right: 0; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); width: 150px; z-index: 100;">
+                            <a href="#" style="display: block; padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; border-bottom: 1px solid var(--border-color);"><i class="fa-solid fa-gear" style="margin-right: 8px;"></i> Settings</a>
+                            <a href="#" onclick="logout()" style="display: block; padding: 0.75rem 1rem; color: var(--danger-color); text-decoration: none;"><i class="fa-solid fa-right-from-bracket" style="margin-right: 8px;"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Dashboard Section -->
+                <div id="section-dashboard" class="section-view active">
+                    <h2 style="margin-bottom: 1.5rem;">Dashboard Overview</h2>
+                    
+                    <div class="dashboard-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--primary-color);">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>24</h3>
+                                <p>Total Classes</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--secondary-color);">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>856</h3>
+                                <p>Total Students</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--success-color);">
+                                <i class="fa-solid fa-file-signature"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>142</h3>
+                                <p>Total Quizzes</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background-color: var(--warning-color);">
+                                <i class="fa-solid fa-check-double"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>3,420</h3>
+                                <p>Completed Attempts</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Quiz Performance Over Time</h3>
+                            <div style="position: relative; height: 300px; width: 100%;">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Pass Percentage</h3>
+                            <div style="position: relative; height: 300px; width: 100%;">
+                                <canvas id="passChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Classes & Students Section -->
+                <div id="section-classes" class="section-view">
+
+                    <!-- Top Row: Title + Import Button -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <div>
+                            <h2 style="margin:0;">Student Management</h2>
+                            <p style="margin:0.25rem 0 0; font-size:0.9rem;">View, filter, and manage all enrolled students.</p>
+                        </div>
+                        <div style="display:flex; gap:0.75rem; align-items:center;">
+                            <button class="btn btn-secondary" onclick="exportCredentials()" id="exportBtn" style="display:none;">
+                                <i class="fa-solid fa-download"></i> Export Credentials
+                            </button>
+                            <button class="btn btn-primary" onclick="document.getElementById('excelUpload').click()">
+                                <i class="fa-solid fa-file-excel"></i> Import Excel (.xlsx)
+                            </button>
+                            <input type="file" id="excelUpload" accept=".xlsx, .xls" style="display: none;" onchange="handleExcelImport(event)">
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar -->
+                    <div class="filter-bar">
+                        <i class="fa-solid fa-filter" style="color:var(--primary-color); font-size:0.9rem;"></i>
+                        <label>Class:</label>
+                        <select class="filter-select" id="filterStudClass" onchange="applyStudentFilters()">
+                            <option value="">All Classes</option>
+                            <option value="Grade 1">Grade 1</option>
+                            <option value="Grade 2">Grade 2</option>
+                            <option value="Grade 3">Grade 3</option>
+                            <option value="Grade 4">Grade 4</option>
+                            <option value="Grade 5">Grade 5</option>
+                            <option value="Grade 6">Grade 6</option>
+                            <option value="Grade 7">Grade 7</option>
+                            <option value="Grade 8">Grade 8</option>
+                            <option value="Grade 9">Grade 9</option>
+                            <option value="Grade 10">Grade 10</option>
+                            <option value="Grade 11">Grade 11</option>
+                            <option value="Grade 12">Grade 12</option>
+                        </select>
+
+                        <div class="filter-divider"></div>
+
+                        <label>Session:</label>
+                        <select class="filter-select" id="filterStudSession" onchange="applyStudentFilters()">
+                            <option value="">All Sessions</option>
+                            <!-- Populated by JS -->
+                        </select>
+
+                        <button class="filter-clear-btn" onclick="clearStudentFilters()" title="Clear Filters">
+                            <i class="fa-solid fa-xmark"></i> Clear
+                        </button>
+
+                        <span class="student-count-badge" id="studentCountBadge">0 students</span>
+                    </div>
+
+                    <!-- Table Card -->
+                    <div class="card" style="padding:0; overflow:hidden;">
+                        <div style="overflow-x: auto;">
+                            <table id="studentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student Name</th>
+                                        <th>Student ID</th>
+                                        <th>Username</th>
+                                        <th>Class</th>
+                                        <th>Session</th>
+                                        <th>Status</th>
+                                        <th>Date Created</th>
+                                        <th style="text-align: right;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody">
+                                    <tr><td colspan="8" style="text-align:center; padding:3rem; color:var(--text-secondary);"><i class="fa-solid fa-users-slash" style="font-size:2rem; display:block; margin-bottom:0.75rem; opacity:0.4;"></i>No students yet. Import an Excel file to get started.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Quiz Section -->
+                <div id="section-upload" class="section-view">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <div>
+                            <h2>Create Quiz from Text</h2>
+                            <p style="margin:0;">Paste your quiz content below — the system will automatically parse and structure it.</p>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start;">
+
+                        <!-- LEFT: Input Card -->
+                        <div class="card" style="display:flex; flex-direction:column; gap:1.25rem;">
+
+                            <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+                                <div style="flex:2; min-width:180px;">
+                                    <label class="form-label">Quiz Title</label>
+                                    <input type="text" id="quizTitle" class="form-control" placeholder="e.g. Chapter 3 — Science">
+                                </div>
+                                <div style="flex:1; min-width:120px;">
+                                    <label class="form-label">Target Class</label>
+                                    <input type="text" id="quizTargetClass" class="form-control" placeholder="e.g. Grade 5" list="classList">
+                                    <datalist id="classList"></datalist>
+                                </div>
+                                <div style="flex:1; min-width:180px;">
+                                    <label class="form-label">Academic Session</label>
+                                    <select id="quizSession" class="form-control">
+                                        <!-- Generated dynamically by JS -->
+                                    </select>
+                                </div>
+                                <div style="flex:1; min-width:120px;">
+                                    <label class="form-label">Subject</label>
+                                    <input type="text" id="quizSubject" class="form-control" placeholder="e.g. Science">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Paste Your Quiz Content</label>
+                                <div id="quizRawText" class="form-control" contenteditable="true"
+                                    style="font-family: monospace; font-size: 0.9rem; min-height: 350px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.3;"
+                                    data-placeholder="Scenario: Ali was a young student who lived near a river in a small town...
+
+Q1. What was Ali's main passion?
+A) Sports
+B) Science
+C) Cooking
+D) Music
+Correct option: B
+
+...paste up to 5 questions with images"
+                                    oninput="liveParseQuiz()"></div>
+                                <style>
+                                    #quizRawText:empty:before {
+                                        content: attr(data-placeholder);
+                                        color: var(--text-secondary);
+                                        opacity: 0.6;
+                                        pointer-events: none;
+                                        display: block; /* For Firefox */
+                                    }
+                                    #quizRawText p, #quizRawText div {
+                                        margin: 0 !important;
+                                        padding: 0 !important;
+                                    }
+                                    #quizRawText br {
+                                        display: block;
+                                        content: "";
+                                        margin-top: 4px;
+                                    }
+                                </style>
+                            </div>
+
+                            <div style="display:flex; gap:1rem; justify-content:flex-end; padding-top:0.5rem; border-top:1px solid var(--border-color);">
+                                <button class="btn btn-secondary" onclick="clearQuizInput()">Clear</button>
+                                <button id="publishQuizBtn" class="btn btn-primary" onclick="publishParsedQuiz()">
+                                    <i class="fa-solid fa-paper-plane"></i> Parse &amp; Publish
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: Format Guide + Live Preview -->
+                        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+
+                            <!-- Format Guide -->
+                            <div class="card" style="background:rgba(79,70,229,0.04); border-color:var(--primary-color);">
+                                <h4 style="color:var(--primary-color); margin-bottom:0.75rem;"><i class="fa-solid fa-circle-info"></i> Flexible Format Guide</h4>
+                                <p style="font-size:0.88rem; margin-bottom:0.75rem;">The parser accepts any natural format. These patterns are all supported:</p>
+                                <ul style="font-size:0.85rem; color:var(--text-secondary); padding-left:1.25rem; line-height:2;">
+                                    <li><strong>Scenario:</strong> <code>Scenario:</code> or <code>Passage:</code> or a plain paragraph before Q1</li>
+                                    <li><strong>Questions:</strong> <code>Q1.</code> <code>1.</code> <code>Question 1</code> <code>1)</code></li>
+                                    <li><strong>Options:</strong> <code>A)</code> <code>A.</code> <code>(A)</code> <code>a)</code></li>
+                                    <li><strong>Correct:</strong> <code>Correct option: B</code> <code>Answer: B</code> <code>Correct: B</code></li>
+                                </ul>
+                            </div>
+
+                            <!-- Live Preview -->
+                            <div class="card" id="previewCard" style="display:none;">
+                                <h4 style="margin-bottom:1rem;"><i class="fa-solid fa-eye" style="color:var(--success-color);"></i> Live Preview</h4>
+                                <div id="parsedPreview"></div>
+                            </div>
+
+                            <div id="parseError" style="display:none;" class="card" style="border-color:var(--danger-color); background:rgba(239,68,68,0.05);">
+                                <p style="color:var(--danger-color); margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> <span id="parseErrorMsg"></span></p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Quiz Library -->
+                <div id="section-library" class="section-view">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                        <h2 style="margin:0;">Quiz Library</h2>
+                        <div style="display:flex; gap:1rem;">
+                            <select id="filterLibClass" class="form-control" onchange="loadQuizLibrary()">
+                                <option value="">All Classes</option>
+                            </select>
+                            <select id="filterLibSession" class="form-control" onchange="loadQuizLibrary()">
+                                <option value="">All Sessions</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="quizLibraryContainer"></div>
+                </div>
+
+                <!-- Results & Reports -->
+                <div id="section-results" class="section-view">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                        <h2 style="margin:0;">Results &amp; Reports</h2>
+                        <div style="display:flex; gap:1rem; align-items:center;">
+                            <select id="filterResClass" class="form-control" onchange="loadResults()">
+                                <option value="">All Classes</option>
+                            </select>
+                            <select id="filterResSession" class="form-control" onchange="loadResults()">
+                                <option value="">All Sessions</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="exportResultsExcel()">
+                                <i class="fa-solid fa-file-excel"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    <div id="resultsContainer"></div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="../js/db.js"></script>
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Dashboard - Quizee By Nisar Ali</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .layout { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
+        .sidebar { width: 260px; height: 100vh; background-color: var(--surface-color); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; transition: var(--transition); z-index: 10; }
+        .sidebar-header { padding: 1.5rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
+        .sidebar-header h2 { margin: 0; font-size: 1.25rem; }
+        .nav-menu { list-style: none; padding: 1rem 0; flex: 1; overflow-y: auto; }
+        .nav-item { padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 1rem; color: var(--text-secondary); text-decoration: none; cursor: pointer; transition: var(--transition); font-size: 0.95rem; }
+        .nav-item:hover, .nav-item.active { background-color: rgba(15, 23, 42, 0.05); color: var(--text-primary); border-right: 4px solid var(--text-primary); font-weight: 600; }
+        [data-theme="dark"] .nav-item:hover, [data-theme="dark"] .nav-item.active { background-color: rgba(255, 255, 255, 0.05); color: white; border-right-color: white; }
+        .nav-item i { width: 20px; text-align: center; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; background-color: var(--bg-color); height: 100vh; }
+        .topbar { height: 70px; background-color: var(--surface-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; }
+        .content-area { padding: 2rem; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--surface-color); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 1rem; transition: var(--transition); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .stat-icon { width: 48px; height: 48px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; background-color: var(--text-secondary); }
+        .stat-info h3 { font-size: 1.5rem; margin: 0; color: var(--text-primary); }
+        .stat-info p { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .section-view { display: none; animation: fadeIn 0.3s ease; }
+        .section-view.active { display: block; }
+        .table-responsive { overflow-x: auto; background: var(--surface-color); border-radius: var(--radius-lg); border: 1px solid var(--border-color); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+        th { background-color: rgba(0,0,0,0.02); color: var(--text-secondary); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; }
+        .action-btns { display: flex; gap: 0.5rem; }
+        .badge { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+        .badge.active { background: rgba(16, 185, 129, 0.1); color: var(--success-color); }
+        .badge.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning-color); }
+        .badge.inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger-color); }
+        /* Quiz Management Styles */
+        .quiz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+        .quiz-mgmt-card { background: var(--surface-color); border: 2px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.25rem; transition: var(--transition); position: relative; }
+        .quiz-mgmt-card.selected { border-color: var(--primary-color); background: rgba(79,70,229,0.04); }
+        .quiz-mgmt-card:hover { box-shadow: var(--shadow-md); }
+        .quiz-cb { position: absolute; top: 1rem; right: 1rem; width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color); }
+        .bulk-bar { display: none; position: sticky; top: 0; z-index: 20; background: var(--primary-color); color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-md); margin-bottom: 1rem; align-items: center; justify-content: space-between; gap: 1rem; }
+        .bulk-bar.visible { display: flex; }
+        /* Search highlight */
+        .search-highlight { background: rgba(245,158,11,0.3); border-radius: 2px; }
+        /* Admin filter bar */
+        .admin-filter-bar { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem; }
+        .admin-filter-select { padding: 0.4rem 1.8rem 0.4rem 0.75rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--surface-color); color: var(--text-primary); font-family: var(--font-family); font-size: 0.85rem; cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%2364748b' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.5rem center; min-width: 130px; }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-shield-halved fa-2x" style="color: var(--primary-color);"></i>
+                <div>
+                    <h2>Super Admin</h2>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin:0;">System Control Panel</p>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" onclick="switchAdminSection('dashboard', this)"><i class="fa-solid fa-chart-pie"></i> Overview</li>
+                <li class="nav-item" onclick="switchAdminSection('teachers', this)"><i class="fa-solid fa-chalkboard-user"></i> Teacher Management</li>
+                <li class="nav-item" onclick="switchAdminSection('students', this)"><i class="fa-solid fa-user-graduate"></i> Student Management</li>
+                <li class="nav-item" onclick="switchAdminSection('quizzes', this)"><i class="fa-solid fa-book-open"></i> Quiz Management</li>
+                <li class="nav-item" onclick="switchAdminSection('attempts', this)"><i class="fa-solid fa-square-poll-vertical"></i> Quiz Attempts</li>
+                <li class="nav-item" onclick="switchAdminSection('logs', this)"><i class="fa-solid fa-clock-rotate-left"></i> Activity Logs</li>
+                <li class="nav-item" onclick="switchAdminSection('settings', this)"><i class="fa-solid fa-gears"></i> System Settings</li>
+            </ul>
+            <div style="padding: 1rem; border-top: 1px solid var(--border-color);">
+                <button class="btn btn-secondary" style="width: 100%; border-color: var(--danger-color); color: var(--danger-color);" onclick="logoutAdmin()">
+                    <i class="fa-solid fa-power-off"></i> System Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar">
+                <div style="display: flex; gap: 1rem;">
+                    <div style="position: relative; width: 320px;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                        <input type="text" id="adminGlobalSearch" placeholder="Search teachers, students, quizzes..." oninput="handleAdminSearch()" style="width: 100%; padding: 0.5rem 1rem 0.5rem 2.5rem; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); font-family: var(--font-family);">
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1.5rem;">
+                    <button class="btn-icon" onclick="toggleTheme()" title="Toggle Theme"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+                    <i class="fa-solid fa-bell" style="color: var(--text-secondary); cursor: pointer;"></i>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <img src="https://ui-avatars.com/api/?name=Super+Admin&background=1e293b&color=fff" alt="Admin" style="width:36px; border-radius:50%;">
+                        <span style="font-weight: 600;" id="adminNameDisplay">Loading...</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Overview Dashboard -->
+                <div id="section-dashboard" class="section-view active">
+                    <h2 style="margin-bottom: 1.5rem;">System Overview</h2>
+                    
+                    <div class="dashboard-grid">
+                        <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('teachers', document.querySelector('.nav-item:nth-child(2)'))">
+                            <div class="stat-icon" style="background:#3b82f6;"><i class="fa-solid fa-chalkboard-user"></i></div>
+                            <div class="stat-info"><h3 id="statTeachers">0</h3><p>Total Teachers</p></div>
+                        </div>
+                        <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('students', document.querySelector('.nav-item:nth-child(3)'))">
+                            <div class="stat-icon" style="background:#10b981;"><i class="fa-solid fa-user-graduate"></i></div>
+                            <div class="stat-info"><h3 id="statStudents">0</h3><p>Total Students</p></div>
+                        </div>
+                        <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('quizzes', document.querySelector('.nav-item:nth-child(4)'))">
+                            <div class="stat-icon" style="background:#8b5cf6;"><i class="fa-solid fa-file-signature"></i></div>
+                            <div class="stat-info"><h3 id="statQuizzes">0</h3><p>Total Quizzes</p></div>
+                        </div>
+                        <div class="stat-card" style="cursor:pointer;" onclick="switchAdminSection('attempts', document.querySelector('.nav-item:nth-child(5)'))">
+                            <div class="stat-icon" style="background:#ec4899;"><i class="fa-solid fa-check-double"></i></div>
+                            <div class="stat-info"><h3 id="statAttempts">0</h3><p>Quiz Attempts</p></div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">System Traffic (Active Users)</h3>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="sysTrafficChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Role Distribution</h3>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="roleDistChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teacher Management -->
+                <div id="section-teachers" class="section-view">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; align-items: center;">
+                        <h2>Teacher Management</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr><th>Name</th><th>Institution</th><th>Email</th><th>Status</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody id="adminTeachersTableBody">
+                                <!-- Dynamic rows inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Student Management -->
+                <div id="section-students" class="section-view">
+                    <h2>Student Management</h2>
+                    <p>Global view of all students generated across all teachers.</p>
+                    <div class="table-responsive" style="margin-top:1rem;">
+                        <table>
+                            <thead><tr><th>ID</th><th>Name</th><th>Class</th><th>Teacher</th><th>Actions</th></tr></thead>
+                            <tbody id="adminStudentsTableBody">
+                                <!-- Dynamic rows inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Activity Logs -->
+                <div id="section-logs" class="section-view">
+                    <h2>Activity Logs</h2>
+                    <div class="table-responsive" style="margin-top:1rem;">
+                        <table>
+                            <thead><tr><th>Date & Time</th><th>User</th><th>Role</th><th>Action</th><th>IP Address</th></tr></thead>
+                            <tbody id="adminLogsTableBody">
+                                <!-- Dynamic rows inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Quiz Management -->
+                <div id="section-quizzes" class="section-view">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <div>
+                            <h2 style="margin:0;">Quiz Management</h2>
+                            <p style="margin:0.25rem 0 0; font-size:0.9rem;">View, filter, and delete quizzes from all teachers.</p>
+                        </div>
+                        <span id="adminQuizCountBadge" style="padding:0.3rem 0.9rem; background:rgba(139,92,246,0.1); color:#8b5cf6; border-radius:2rem; font-size:0.85rem; font-weight:600;">0 quizzes</span>
+                    </div>
+
+                    <!-- Bulk Delete Bar -->
+                    <div class="bulk-bar" id="bulkBar">
+                        <span><i class="fa-solid fa-check-square"></i> <span id="selectedCount">0</span> quizzes selected</span>
+                        <div style="display:flex; gap:0.75rem;">
+                            <button class="btn" style="background:white; color:var(--danger-color); font-size:0.85rem; padding:0.4rem 1rem;" onclick="bulkDeleteQuizzes()">
+                                <i class="fa-solid fa-trash"></i> Delete Selected
+                            </button>
+                            <button class="btn" style="background:rgba(255,255,255,0.2); color:white; font-size:0.85rem; padding:0.4rem 1rem;" onclick="clearSelection()">
+                                <i class="fa-solid fa-xmark"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="admin-filter-bar">
+                        <i class="fa-solid fa-filter" style="color:var(--primary-color); font-size:0.85rem;"></i>
+                        <label style="font-size:0.82rem; font-weight:600; color:var(--text-secondary);">Teacher:</label>
+                        <select class="admin-filter-select" id="filterQuizTeacher" onchange="renderAdminQuizzes()">
+                            <option value="">All Teachers</option>
+                        </select>
+                        <label style="font-size:0.82rem; font-weight:600; color:var(--text-secondary);">Class:</label>
+                        <select class="admin-filter-select" id="filterQuizClass" onchange="renderAdminQuizzes()">
+                            <option value="">All Classes</option>
+                        </select>
+                        <label style="font-size:0.82rem; font-weight:600; color:var(--text-secondary);">Search:</label>
+                        <input type="text" id="filterQuizSearch" class="admin-filter-select" placeholder="Quiz title or subject..." oninput="renderAdminQuizzes()" style="min-width:180px; padding:0.4rem 0.75rem; background-image:none;">
+                        <button onclick="clearQuizFilters()" style="padding:0.4rem 0.85rem; border:1px solid var(--border-color); border-radius:var(--radius-md); background:transparent; color:var(--text-secondary); cursor:pointer; font-size:0.83rem; display:flex; align-items:center; gap:0.35rem;">
+                            <i class="fa-solid fa-xmark"></i> Clear
+                        </button>
+                        <label style="font-size:0.82rem; font-weight:600; color:var(--text-secondary); margin-left:auto;">
+                            <input type="checkbox" id="selectAllCb" onchange="toggleSelectAll()" style="accent-color:var(--primary-color);"> Select All
+                        </label>
+                    </div>
+
+                    <div class="quiz-grid" id="adminQuizGrid">
+                        <p style="color:var(--text-secondary);">Loading quizzes...</p>
+                    </div>
+                </div>
+
+                <!-- Quiz Attempts -->
+                <div id="section-attempts" class="section-view">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <div>
+                            <h2 style="margin:0;">Quiz Attempts</h2>
+                            <p style="margin:0.25rem 0 0; font-size:0.9rem;">All student submissions across the platform.</p>
+                        </div>
+                        <span id="adminAttemptsCountBadge" style="padding:0.3rem 0.9rem; background:rgba(236,72,153,0.1); color:#ec4899; border-radius:2rem; font-size:0.85rem; font-weight:600;">0 attempts</span>
+                    </div>
+                    <div class="admin-filter-bar">
+                        <i class="fa-solid fa-filter" style="color:var(--primary-color); font-size:0.85rem;"></i>
+                        <input type="text" id="filterAttemptSearch" class="admin-filter-select" placeholder="Student name or quiz..." oninput="renderAdminAttempts()" style="min-width:200px; padding:0.4rem 0.75rem; background-image:none;">
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th><th>Student</th><th>Quiz Title</th><th>Teacher</th><th>Score</th><th>Result</th><th>Time Spent</th><th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminAttemptsTableBody">
+                                <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- System Settings -->
+                <div id="section-settings" class="section-view">
+                    <h2>System Settings</h2>
+                    <div class="card" style="max-width: 600px; margin-top: 1rem;">
+                        <form onsubmit="event.preventDefault(); alert('Settings saved successfully.'); db.logActivity('Nisar Ali', 'Super Admin', 'Updated System Settings');">
+                            <div class="form-group"><label class="form-label">Platform Name</label><input type="text" class="form-control" value="Quizee By Nisar Ali"></div>
+                            <div class="form-group"><label class="form-label">Admin Email Contact</label><input type="email" class="form-control" value="admin@quizee.edu"></div>
+                            <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0;"></div>
+                            <h4>Database Maintenance</h4>
+                            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">Hard reset all local storage data if needed.</p>
+                            <div style="display: flex; gap: 1rem;">
+                                <button type="button" class="btn btn-primary" style="background:var(--danger-color);" onclick="if(confirm('Are you sure? This deletes ALL data permanently.')){ localStorage.clear(); window.location.href='../index.html'; }">
+                                    <i class="fa-solid fa-trash"></i> Factory Reset DB
+                                </button>
+                            </div>
+                            <div style="margin-top: 2rem;">
+                                <button type="submit" class="btn btn-primary" style="background: var(--success-color); width: 100%;">Save Global Settings</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="../js/db.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizee By Nisar Ali - Modern Quiz Management</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    
+    <div class="auth-wrapper">
+        <div class="auth-sidebar">
+            <h1>Quizee</h1>
+            <p>By Nisar Ali (ICT Educator-AKESP)</p>
+            <p style="font-size: 1rem; margin-top: 1rem;">The ultimate AI-powered quiz management platform for modern educators.</p>
+        </div>
+        
+        <div class="auth-main">
+            <div class="auth-card fade-in">
+                
+                <div class="auth-tabs">
+                    <div class="auth-tab active" id="tab-teacher" onclick="switchTab('teacher')">Teacher Portal</div>
+                    <div class="auth-tab" id="tab-student" onclick="switchTab('student')">Student Portal</div>
+                </div>
+
+                <!-- Teacher Login Form -->
+                <div id="teacher-form" class="fade-in">
+                    <h2 style="margin-bottom: 1.5rem; text-align: center;">Welcome Back, Educator!</h2>
+                    <form id="form-teacher-login" onsubmit="handleTeacherLogin(event)">
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" required placeholder="name@school.edu">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                        </button>
+                    </form>
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <p>Don't have an account? <a href="#" onclick="toggleTeacherMode('signup')">Sign Up</a></p>
+                    </div>
+                </div>
+
+                <!-- Teacher Sign Up Form (Hidden by default) -->
+                <div id="teacher-signup-form" class="fade-in" style="display: none;">
+                    <h2 style="margin-bottom: 1.5rem; text-align: center;">Create an Account</h2>
+                    <form id="form-teacher-signup" onsubmit="handleTeacherSignup(event)">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" required placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Institution Name</label>
+                            <input type="text" class="form-control" required placeholder="Global High School">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" required placeholder="name@school.edu">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" required placeholder="••••••••">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fa-solid fa-user-plus"></i> Sign Up
+                        </button>
+                    </form>
+                    <div style="text-align: center; margin-top: 1.5rem;">
+                        <p>Already have an account? <a href="#" onclick="toggleTeacherMode('login')">Sign In</a></p>
+                    </div>
+                </div>
+
+                <!-- Student Login Form (Hidden by default) -->
+                <div id="student-form" class="fade-in" style="display: none;">
+                    <h2 style="margin-bottom: 1.5rem; text-align: center;">Student Login</h2>
+                    <p style="text-align: center; margin-bottom: 1.5rem; color: var(--text-secondary);">Enter the credentials provided by your teacher.</p>
+                    <form id="form-student-login" onsubmit="handleStudentLogin(event)">
+                        <div class="form-group">
+                            <label class="form-label">Student ID (3-digits)</label>
+                            <input type="text" class="form-control" required pattern="[0-9]{3}" maxlength="3" placeholder="e.g. 101">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password (6-digits)</label>
+                            <input type="password" class="form-control" required pattern="[0-9]{6}" maxlength="6" placeholder="••••••">
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; background-color: var(--secondary-color);">
+                            <i class="fa-solid fa-graduation-cap"></i> Enter Quiz Portal
+                        </button>
+                    </form>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <a href="pages/admin-login.html" style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500; transition: color 0.3s ease;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-secondary)'">
+                        <i class="fa-solid fa-shield-halved"></i> Admin Portal
+                    </a>
+                    <button class="btn-icon" onclick="toggleTheme()" title="Toggle Dark Mode">
+                        <i class="fa-solid fa-moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
